@@ -2,7 +2,14 @@ from datetime import datetime, timedelta
 from collections import UserDict
 
 
+
+# =============== Блок класів ===============
+
+
+
 class Field:
+    """Базовий клас для полів запису."""
+
     def __init__(self, value):
         self.value = value
 
@@ -14,19 +21,20 @@ class Name(Field):
     pass
 
 class Phone(Field):
+    """Клас для телефону контакту. Валідація включена."""
+
     def __init__(self, value):
         if not str(value).isdigit():
-            # print("Phone number should contain only digits.")
             raise ValueError("Phone number should contain only digits.")
 
-
         if len(str(value)) != 10:
-            # print("Phone number should contain 10 digits.")
             raise ValueError("Phone number should contain 10 digits")
         super().__init__(value)
 
 
 class Birthday(Field):
+    """Клас для дня народження контакту. Валідація включена."""
+
     def __init__(self, value):
         try:
             datetime.strptime(value, '%d.%m.%Y')
@@ -36,13 +44,18 @@ class Birthday(Field):
 
 
 class Record:
+    """Клас для зберігання всієї інформації про один контакт."""
+
+
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
         self.birthday = None
 
+
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
+
 
     def remove_phone(self, phone):
         for p in self.phones:
@@ -50,29 +63,38 @@ class Record:
                 self.phones.remove(p)
                 return
 
+
     def edit_phone(self, old_phone, new_phone):
         new_phone_obj = Phone(new_phone)
         self.remove_phone(old_phone)
         self.add_phone(new_phone_obj)
 
+
     def find_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
                 return p.value
-            
+
+
     def add_birthday(self, date):
         self.birthday = Birthday(date)
-            
+
+
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}, birthday: {self.birthday.value if self.birthday else 'N/A'}"
 
 
 class AddressBook(UserDict):
+    """Клас для зберігання інформації про всі контакти."""
+
+
     def add_record(self, name, phone):
+        """Створює новий запис про контакт та додає його до адресної книги."""
         record = Record(name)
         record.add_phone(phone)
         self.data[record.name.value] = record
         print(f"Added {record.name.value} to the address book.")
+
 
     def change_phone(self, name, new_phone):
         record = self.find(name)
@@ -82,13 +104,13 @@ class AddressBook(UserDict):
               return f"Phone number for {name} changed."
             except ValueError as e:
                 return f"Value error: {e}"
-
         else:
             return f"Contact {name} not found."
 
 
     def find(self, name):
         return self.data.get(name)
+
 
     def delete(self, name):
         if name in self.data:
@@ -120,6 +142,11 @@ class AddressBook(UserDict):
             print(f"{day}: {', '.join(names)}")
     
 
+
+
+
+# =============== Блок функцій для взаємодії з користувачем ===============
+
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
@@ -146,12 +173,12 @@ def add_contact(args, book):
     book.add_record(name, phone)
     return "Contact added."
 
+
 @input_error
 def change_contact(args, book):
     name, phone = args
     return book.change_phone(name, phone)
     
-
 
 @input_error
 def add_birthday(args, book):
@@ -172,7 +199,8 @@ def get_phone(args, book):
         return str(record.phones[0].value)
     else:
         return "Contact not found."
-    
+
+
 @input_error
 def list_all_contacts(_, book):
     all_contacts = '\n'.join([f"{name}: {str(record.phones[0].value)}" for name, record in book.data.items()])
@@ -181,6 +209,7 @@ def list_all_contacts(_, book):
         return all_contacts
     else:
         return "Phone book is empty"
+
 
 @input_error
 def show_birthday(args, book):
@@ -196,6 +225,10 @@ def show_birthday(args, book):
 
 def list_birthdays(book):
     book.get_birthdays_per_week()
+
+
+
+# ============ Головна функція, що запускає інтерактивний режим ===============
 
 def main():
     book = AddressBook()
